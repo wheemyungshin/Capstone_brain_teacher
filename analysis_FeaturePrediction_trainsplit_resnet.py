@@ -397,7 +397,6 @@ def main():
             data_all[sbj] = concat_dataset([bdpy.BData(f) for f in subjects[sbj]],
                                            successive=suc_cols)
 
-    print("DATA ALL:", data_all)
     data_feature = bdpy.BData(image_feature)
     data_feature.show_metadata()
 
@@ -440,22 +439,11 @@ def main():
         x = dat.select(rois[roi])           # Brain data
         datatype = dat.select('DataType')   # Data type
         labels = dat.select('stimulus_id')  # Image labels in brain data
-        print("Labels:", labels) 
-        print("Labels:", labels.shape) #(3450,1)
 
         y = data_feature.select(feat)             # Image features
         y_label = data_feature.select('ImageID')  # Image labels
-        print("ImID:", y_label)
-        print("ImID:", y_label.shape) #(16622,1)
 
         y = y[:, :1000]
-
-        print(x)
-        print(x.shape) #(3450,860)
-        print(y)
-        print(y.shape) #(16622,1000)
-        print(y_label)
-        print(y_label.shape) #(16622,1)
 
         train_indexes = []
         test_indexes = []
@@ -465,15 +453,8 @@ def main():
             else:
                 train_indexes.append(i)
 
-        print("train_label: ", train_indexes)
-        print("train_label: ", len(train_indexes))#1050
-
-        print("test_label: ", test_indexes)
-        print("test_label: ", len(test_indexes))#150
 
         y_label_not_none = np.isnan(y_label)        
-        print(y_label[y_label_not_none==False])
-        print(y_label[y_label_not_none==False].shape) #(1250,1)
 
         '''
         y_train = y[train_indexes, :]
@@ -495,13 +476,6 @@ def main():
         y_label_train = y_label[train_indexes, :]
         y_label_test = y_label[test_indexes, :]
 
-        print("x_train: ", x_train.shape)#1050,740
-        print("x_test: ", x_test.shape)#150,740
-        print("y_train: ", y_train.shape)#1050,
-        print("y_test: ", y_test.shape)#150,
-        print("y_label_train: ", y_label_train.shape)#1050,1
-        print("y_label_test: ", y_label_test.shape)#150,1
-
         # Feature prediction
         pred_y, true_y, test_y_predicted, test_y_true = feature_prediction(x_train, y_train,
                                             x_train, y_train,
@@ -512,36 +486,17 @@ def main():
             f_x = np.exp(x) / np.sum(np.exp(x))
             return f_x
 
-        print(test_y_predicted.shape)
-        print(test_y_predicted)
-        print(test_y_true.shape)
-        print(test_y_true)
         answers = []
         save_numpy = []
         for i in range(len(test_y_predicted)):
             pred_y = softmax(test_y_predicted[i].squeeze())
-            print(np.argmax(pred_y))
-            print(test_y_true[i])
             correct = (test_y_true[i] == np.argmax(pred_y))
             answers.append(correct)
             save_numpy.append(pred_y)
-            print("RANK: ", 150 - pred_y.argsort().argsort()[int(test_y_true[i])])
         
-        print(np.array(save_numpy))
-        print(np.array(save_numpy).shape)
         numpy_name = "soft_labels/"+analysis_id+".npy"
         np.save(numpy_name, np.array(save_numpy))
-        '''
-        for i in range(len(test_y_predicted)):
-            test_diff = np.abs(test_y_true - test_y_predicted[i])
-            print(test_y_predicted[i].shape)
-            print(test_diff.shape)
-            closest_label = np.argmin(np.sum(test_diff, axis=1))
-            print(closest_label)
-            correct = (closest_label == i)
-            answers.append(correct)
-        '''
-        print(answers)
+
         if True not in answers:
             acc = 0
         else:
@@ -553,8 +508,7 @@ def main():
                 else:
                     err += 1
             acc = corr / (corr + err)
-        print("Accuracy: ", acc)        
-
+        print("Accuracy: ", acc)       
 
         dist.unlock()
 
