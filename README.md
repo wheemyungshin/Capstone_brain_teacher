@@ -11,38 +11,49 @@
 - 방법: 기존 딥러닝 모델의 KD에서 사용되는 딥러닝 teacher model을 사람의 fMRI prediction으로 대체함. fMRI prediction은 공개된 fMRI - 이미지 페어 데이터를 활용하여 딥러닝을 훈련시켜 진행하였으며, student 모델로 쓰일 모델 또한 딥러닝 classification 모델을 사용.
 
 ## Contributions
-1. FinancialDatareader를 이용하여 주식 종목 불러오기/프로세싱/딥러닝 학습
-2. 일반적인 LSTM 기반 방법이 아닌 Classification 방법을 사용하여 등락률을 맞추는 문제로 간략화, 실질적 정확도를 높임
-3. 종목 예측에 도움이 되는 추가 지수를 결합하여 정확도 향상
-4. 정확도 계산을 위한 세가지 추가 metric을 도입하여 실제 수익률 예측
-5. GradCAM을 이용하여 각 추가 지수의 기여도 분석
-6. 지속적 학습을 통한 예측 정확도 유지 및 향상 (준비중)
+1. fMRI 데이터로부터 피실험자가 관찰하고 있던 이미지의 class를 예측하는 딥러닝 모델 훈련
+2. fMRI 예측 결과를 KD teacher 모델의 soft label output으로 활용하여 KD를 진행하는 프레임워크 개발
+3. 위의 프레임워크를 이용하여 기존의 딥러닝 기반 KD보다 발전된 성능향상을 이뤄냄
+4. 위의 프레임워크를 이용하여 다양한 RoI 영역으로부터 나온 fMRI신호를 활용하고, 각각의 결과를 비교/분석함
 
 Main code
 --------------------
 
 fMRI prediction
 --------------------
-* FinancialDataLoader를 이용하여 코스피 종목의 종가를 불러올 수 있다.
-split_iter를 이용하여 서로 다른 시작점과 끝점을 가진 split_iter개의 sequantial 데이터가 만들어진다. 
-```python
-import FinanceDataReader as fdr
+* fMRI 데이터를 읽어 딥러닝 모델의 input으로 사용할 수 있도록 정재한다.
+* 딥러닝 모델은 1차원 convolution을 사용하는 1D-ResNet18 사용.
+* 결과물로 soft label output이 numpy의 형태로 저장됨.
 
-read_lines = np.flip(df_kospi.to_numpy(), axis=0)[:100]
+```python
+data_all = {}
+    for sbj in subjects:
+        if len(subjects[sbj]) == 1:
+            data_all[sbj] = bdpy.BData(subjects[sbj][0])
+        else:
+            # Concatenate data
+            suc_cols = ['Run', 'Block']
+            data_all[sbj] = concat_dataset([bdpy.BData(f) for f in subjects[sbj]],
+                                           successive=suc_cols)
 ...
 
-for line in np.flip(read_lines, axis=0):
- try:
-   df = fdr.DataReader(line[0], start_date, end_date)
-  df_ratio = df.iloc[:, 3].astype('float32')
-  df_log1 = pd.DataFrame(df_ratio)
-  df_ratios = np.append(df_ratios, df_ratio.to_numpy())
+        pred_y, true_y, test_y_predicted, test_y_true = feature_prediction(x_train, y_train,
+                                            x_train, y_train,
+                                            n_voxel=num_voxel[roi],
+                                            n_iter=n_iter)
+...
 
-  for j in range(0,split_iter):
-      split_point_start = j * max_test_size
-      split_point_end = (split_iter - j + 1) * max_test_size
-      df_train1 = df_log1.iloc[-max_train_size+split_point_start:-split_point_end]
-      df_test1 = df_log1.iloc[-split_point_end:-split_point_end+max_test_size]
+        answers = []
+        save_numpy = []
+        for i in range(len(test_y_predicted)):
+            pred_y = softmax(test_y_predicted[i].squeeze())
+            correct = (test_y_true[i] == np.argmax(pred_y))
+            answers.append(correct)
+            save_numpy.append(pred_y)
+        
+        numpy_name = "soft_labels/"+analysis_id+".npy"
+        np.save(numpy_name, np.array(save_numpy))
+
 ```
 
 Knowledge Distillation
