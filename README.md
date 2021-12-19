@@ -11,10 +11,10 @@
 - 방법: 기존 딥러닝 모델의 KD에서 사용되는 딥러닝 teacher model을 사람의 fMRI prediction으로 대체함. fMRI prediction은 공개된 fMRI - 이미지 페어 데이터를 활용하여 딥러닝을 훈련시켜 진행하였으며, student 모델로 쓰일 모델 또한 딥러닝 classification 모델을 사용.
 
 ## Contributions
-1. fMRI 데이터로부터 피실험자가 관찰하고 있던 이미지의 class를 예측하는 딥러닝 모델 훈련
-2. fMRI 예측 결과를 KD teacher 모델의 soft label output으로 활용하여 KD를 진행하는 프레임워크 개발
-3. 위의 프레임워크를 이용하여 기존의 딥러닝 기반 KD보다 발전된 성능향상을 이뤄냄
-4. 위의 프레임워크를 이용하여 다양한 RoI 영역으로부터 나온 fMRI신호를 활용하고, 각각의 결과를 비교/분석함
+1. fMRI 데이터로부터 피실험자가 관찰하고 있던 이미지의 class를 예측하는 딥러닝 모델 훈련.
+2. fMRI 예측 결과를 KD teacher 모델의 soft label output으로 활용하여 KD를 진행하는 프레임워크 개발.
+3. 위의 프레임워크를 이용하여 기존의 딥러닝 기반 KD보다 발전된 성능향상을 이뤄냄.
+4. 위의 프레임워크를 이용하여 다양한 RoI 영역으로부터 나온 fMRI신호를 활용하고, 각각의 결과를 비교/분석함.
 
 Main code
 --------------------
@@ -58,8 +58,8 @@ data_all = {}
 
 Knowledge Distillation
 --------------------
-* FinancialDataLoader를 이용하여 종목 뿐 아니라 주식시장에 영향을 미치는 각종 지수의 데이터를 불러올 수 있다.
-10가지 추가 지수를 불러와 이전에 불러온 각 종목의 종가 데이터와 날짜가 같은 것끼리 결합(concatenate)한다. 날짜 쌍이 안 맞는 데이터는 버려진다(.dropna).
+* fMRI prediction 결과로 저장된 numpy 데이터를 불러온 뒤 teacher의 soft label로 사용.
+* KD 를 활용하여 ResNet18 딥러닝 classification 모델 학습
 ```python
 
 df2 = fdr.DataReader('KS11', start_date, end_date)
@@ -120,3 +120,8 @@ for num, i in enumerate(df_train.to_numpy()):#[::sample_step]):
 * 인간의 인지 활동에서 발생한 정보가 딥러닝 모델의 성능 향상에 도움을 준 것으로, 인간의 신경망과 인공 신경망이 일종의 연결 고리가 있을 수 있을 가능성도 열어 둘 수 있음
 * 하지만 세부적인 분석은 아직 부족 (fMRI prediction의 어떤 요소가 성능 향상에 도움을 준 것인가? RoI 각 영역과의 연관성? fMRI 외의 다른 비딥러닝 방식의 prediction도 도움이 될 수 있지 않을까? 등등)
 * 위의 해답을 얻기 위해 random soft targe을 활용하는 실험, fMRI로부터 다른 정보를 활용하는 실험 (activation map을 attention mask로 변환하는 등)을 future works로 진행할 수 있음
+
+## Reference
+-------------------------------------
+* 이 Repository는 https://github.com/KamitaniLab/GenericObjectDecoding 을 참고하여 만들어졌습니다.
+* 이 연구는 논문 https://www.nature.com/articles/ncomms15037 로부터 데이터를 제공 받았습니다.
