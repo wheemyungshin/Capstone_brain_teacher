@@ -20,7 +20,8 @@
 
 Main code
 --------------------
-Load & Process Data (각 종목의 종가)
+
+fMRI prediction
 --------------------
 * FinancialDataLoader를 이용하여 코스피 종목의 종가를 불러올 수 있다.
 split_iter를 이용하여 서로 다른 시작점과 끝점을 가진 split_iter개의 sequantial 데이터가 만들어진다. 
@@ -44,7 +45,7 @@ for line in np.flip(read_lines, axis=0):
       df_test1 = df_log1.iloc[-split_point_end:-split_point_end+max_test_size]
 ```
 
-Load & Process Data (추가지수)
+Knowledge Distillation
 --------------------
 * FinancialDataLoader를 이용하여 종목 뿐 아니라 주식시장에 영향을 미치는 각종 지수의 데이터를 불러올 수 있다.
 10가지 추가 지수를 불러와 이전에 불러온 각 종목의 종가 데이터와 날짜가 같은 것끼리 결합(concatenate)한다. 날짜 쌍이 안 맞는 데이터는 버려진다(.dropna).
@@ -83,7 +84,7 @@ for i in range(len(df_dict)):
   df_test = pd.concat([df_test1, df_test2],axis=1).dropna(axis=0)
 ```
 
-등락률 계산
+결과
 --------------------
 * 합쳐진 학습데이터를 하나씩 읽어 전날대비 등락률로 데이터를 변조하였다.
 ```python
@@ -100,68 +101,6 @@ for num, i in enumerate(df_train.to_numpy()):#[::sample_step]):
     previous_train = i
 ```
 
-Classification용 타겟 데이터 생성
---------------------
-* max_test_size(11로 설정) 일 이후의 종가의 변화율을 계산하여 그것이 2% 이상이면 '상승', -2% 이하면 '하락', 둘 다 아닌 것은 '유지'로 분류하였다.
-```python
-df_test = df_test.to_numpy()
-df_test = np.array([(df_test[-1] - df_test[0])/ df_test[0] >= 0.02, (df_test[-1] - df_test[0])/ df_test[0] < -0.02])
-df_test = np.append(df_test, np.expand_dims(np.logical_not(df_test[0]) * np.logical_not(df_test[1]), axis=0), axis=0)
-```
-
-모델 변경
---------------------
-* 시퀀스 데이터를 처리하기 위해 기존의 2D Conv를 모두 1D Conv로 교체하였다. 
-```python
-def conv3x3(in_planes: int, out_planes: int, stride: int = 1, groups: int = 1, dilation: int = 1) -> nn.Conv1d:
-    """3x3 convolution with padding"""
-    return nn.Conv1d(in_planes, out_planes, kernel_size=3, stride=stride,
-                     padding=dilation, groups=groups, bias=False, dilation=dilation)
-```
-
-정확도 측정
---------------------
-* 실제 수익성을 알아보기 위해 accurcay를 포함한 세가지 지수(Precision, Crucial-Fail, Soso-Fail)를 계산하였다.
-또한, Thresholding을 통해 최적의 precision을 갖는 threshold를 선택하여 사용할 수 있다. (utils.py)
-
-```python
-def accuracy(output, target, threshold=0.5):
-    r"""Computes the accuracy over the $k$ top predictions for the specified values of k
-    """
-    output = output > threshold
-    target = target.squeeze()
-    correct = (target == output)
-    #print("C: ", correct)
-    correct = torch.all(correct, dim=1)
-
-    predicted_positive_indexes = (output[:,0].nonzero(as_tuple=True)[0])
-    true_positive = (target[:,0])[predicted_positive_indexes]
-
-    crucial_fail = (target[:,1])[predicted_positive_indexes]
-    soso_fail = (target[:,2])[predicted_positive_indexes]
-    
-    return correct.sum() / output.shape[0], true_positive.sum() / predicted_positive_indexes.shape[0], crucial_fail.sum() / predicted_positive_indexes.shape[0], soso_fail.sum() / predicted_positive_indexes.shape[0]
-    
-```
-
-Tables and Graphs
-------------------------------------------
-* LSTM을 사용하여 주가를 예측한 결과
-![image](https://user-images.githubusercontent.com/40812418/122758082-57543180-d2d3-11eb-870b-6d2255fd6b07.png)
-
-* 1D ResNet을 사용하여 주가를 예측한 결과(Accuracy/Precision/Crucial-Fail/Soso-Fail)
-![image](https://user-images.githubusercontent.com/40812418/122758439-c2056d00-d2d3-11eb-9c5f-8829488c0483.png)
-
-GradCAM
---------------------
-* 각 추가 지수의 기여도를 정량적으로 알아보기 위하여 유명한 딥러닝 분석 기법인 GradCAM을 사용하였다.
-각 지수가 생성하는 gradient를 그래프로 나타낼 수 있었으며 그것의 합을 계산하여 그 합이 큰 순으로 순위를 매길 수 있었다.
-![image](https://user-images.githubusercontent.com/40812418/122761653-70f77800-d2d7-11eb-9beb-896a30695220.png)
-
-
-지속적 학습(준비 중)
---------------------
-* 크롤링을 통해 최신 데이터를 읽은 후 그 데이터를 사용하여 모델을 fine-tuning하는 것으로 모델의 성능을 유지하고, 향상시킬 수 있다.
 
 ## Conclusion
 
