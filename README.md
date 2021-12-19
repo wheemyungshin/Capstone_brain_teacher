@@ -164,10 +164,9 @@ GradCAM
 * 크롤링을 통해 최신 데이터를 읽은 후 그 데이터를 사용하여 모델을 fine-tuning하는 것으로 모델의 성능을 유지하고, 향상시킬 수 있다.
 
 ## Conclusion
-인간의 뇌신호인 fMRI 데이터를 활용한 prediction model을 teacher로 이용하여 knowledge distillation을 수행하는 기법을 개발
-위의 기법을 활용하여 baseline과 비교하여 약 2%, 기존 knowledge distillation과 비교하여 약 1%의 성능 향상을 이뤄 냄
-인간의 인지 활동에서 발생한 정보가 딥러닝 모델의 성능 향상에 도움을 준 것으로, 인간의 신경망과 인공 신경망이 일종의 연결 고리가 있을 수 있을 가능성도 열어 둘 수 있음
-하지만 세부적인 분석은 아직 부족 (fMRI prediction의 어떤 요소가 성능 향상에 도움을 준 것인가? RoI 각 영역과의 연관성? fMRI 외의 다른 비딥러닝 방식의 prediction도 도움이 될 수 있지 않을까? 등등)
-위의 해답을 얻기 위해 random soft targe을 활용하는 실험, fMRI로부터 다른 정보를 활용하는 실험 (activation map을 attention mask로 변환하는 등)을 future works로 진행할 수 있음
-![image](https://user-images.githubusercontent.com/40812418/146673779-0d62cd0e-872f-4558-9189-2e8a5c4776d6.png)
 
+* 인간의 뇌신호인 fMRI 데이터를 활용한 prediction model을 teacher로 이용하여 knowledge distillation을 수행하는 기법을 개발
+* 위의 기법을 활용하여 baseline과 비교하여 약 2%, 기존 knowledge distillation과 비교하여 약 1%의 성능 향상을 이뤄 냄
+* 인간의 인지 활동에서 발생한 정보가 딥러닝 모델의 성능 향상에 도움을 준 것으로, 인간의 신경망과 인공 신경망이 일종의 연결 고리가 있을 수 있을 가능성도 열어 둘 수 있음
+* 하지만 세부적인 분석은 아직 부족 (fMRI prediction의 어떤 요소가 성능 향상에 도움을 준 것인가? RoI 각 영역과의 연관성? fMRI 외의 다른 비딥러닝 방식의 prediction도 도움이 될 수 있지 않을까? 등등)
+* 위의 해답을 얻기 위해 random soft targe을 활용하는 실험, fMRI로부터 다른 정보를 활용하는 실험 (activation map을 attention mask로 변환하는 등)을 future works로 진행할 수 있음
