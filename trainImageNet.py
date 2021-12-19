@@ -699,7 +699,7 @@ def main(brain_teacher_target=None):
 
     noise_teacher = np.random.rand(1050, 150)
     noise_teacher = softmax(noise_teacher/0.01).astype(np.float32)
-
+	
     # Check number of parameters your model
     pytorch_total_params = sum(p.numel() for p in model.parameters())
     print(f"Number of parameters: {pytorch_total_params}")
@@ -715,6 +715,7 @@ def main(brain_teacher_target=None):
     subjects = {'Subject1' : ['data/Subject1.h5']}
     rois = {'VC' : 'ROI_VC = 1'}
     features = ['cnn8']
+
 
     train_transform = transforms.Compose([
         transforms.RandomCrop(448),
@@ -751,7 +752,7 @@ def main(brain_teacher_target=None):
 
         # train for one epoch
         start_time = time.time()
-        last_top1_acc = train(train_loader, epoch, model, optimizer, criterion, teacher_model=None, brain_teacher=noise_teacher)
+        last_top1_acc = train(train_loader, epoch, model, optimizer, criterion, teacher_model=None, brain_teacher=brain_teacher)
         elapsed_time = time.time() - start_time
         print('==> {:.2f} seconds to train this epoch\n'.format(
             elapsed_time))
@@ -908,18 +909,4 @@ def validate(val_loader, model, criterion):
     return top1.avg
 
 if __name__ == "__main__":
-    brain_teacher_target_dir=SAVEPATH+'soft_labels/'
-    brain_teacher_targets=os.listdir(brain_teacher_target_dir)
-    print(brain_teacher_targets)
-    result_dict = {}
-    for file in brain_teacher_targets:
-        brain_teacher_target=brain_teacher_target_dir+file
-        best_acc1 = main(brain_teacher_target=brain_teacher_target)
-    '''
-    for file in brain_teacher_targets:
-        brain_teacher_target=brain_teacher_target_dir+file
-        best_acc1 = main(brain_teacher_target=brain_teacher_target)
-        result_dict[brain_teacher_target] = best_acc1
-    for key, value in result_dict.items():
-        print(key, value)
-    '''
+    best_acc1 = main(brain_teacher_target=SAVEPATH+'soft_label.npy')
