@@ -62,56 +62,30 @@ Knowledge Distillation
 * KD 를 활용하여 ResNet18 딥러닝 classification 모델 학습
 ```python
 
-df2 = fdr.DataReader('KS11', start_date, end_date)
+    if brain_teacher_target is not None:
+        brain_teacher = np.load(brain_teacher_target)
+...
 
-df_ratio2 = df2.iloc[:, 0:1].astype('float32').fillna(0)
-df_log2 = pd.DataFrame(df_ratio2)
-
-
-df_dict = {
-    0 : fdr.DataReader('IXIC', start_date, end_date),#나스닥
-    1 : fdr.DataReader('KQ11', start_date, end_date),#코스닥
-    2 : fdr.DataReader('USD/KRW', start_date, end_date),#달러/원
-    3 : fdr.DataReader('KS50', start_date, end_date),#코스피50
-    4 : fdr.DataReader('KS100', start_date, end_date),#코스피100
-    5 : fdr.DataReader('KS200', start_date, end_date),#코스피200
-    6 : fdr.DataReader('NG', start_date, end_date),#천연가스 선물
-    7 : fdr.DataReader('ZG', start_date, end_date),#금 선물
-    8 : fdr.DataReader('VCB', start_date, end_date),#베트남무역은행
-    9 : fdr.DataReader('US1MT=X', start_date, end_date),#미국채권1개월수익률
-}
-
-for i in range(len(df_dict)):
-  extra_df = df_dict[i]
-  df_ratio_extra = extra_df.iloc[:, 0:1].astype('float32').fillna(0) #((extra_df.iloc[:, 0:1].astype('float32') - extra_df.iloc[:, 0:1].shift().astype('float32')) / extra_df.iloc[:, 0:1].shift().astype('float32')).fillna(0)
-  df_log_extra = pd.DataFrame(df_ratio_extra)
-
-  df_log2 = pd.concat([df_log2, df_log_extra],axis=1)
-
-  df_train2 = df_log2.iloc[:]
-  df_test2 = df_log2.iloc[:]
-
-  df_train =pd.concat([df_train1, df_train2],axis=1).dropna(axis=0)[-min_train_size:]
-  df_test = pd.concat([df_test1, df_test2],axis=1).dropna(axis=0)
+        if brain_teacher is not None:
+            soft_target = brain_teacher[idx]
+            teacher_output = torch.from_numpy(soft_target).cuda()
+            kd_criterion = SoftTarget(T=0.1)
+            kd_loss = kd_criterion(output, teacher_output)
+            kd_losses.update(kd_loss, input.size(0))
+            loss += kd_loss        
 ```
 
 결과
 --------------------
-* 합쳐진 학습데이터를 하나씩 읽어 전날대비 등락률로 데이터를 변조하였다.
-```python
-df_train_ = np.array([])
-previous_train = np.zeros(df_train.shape[1])
-for num, i in enumerate(df_train.to_numpy()):#[::sample_step]):
-    if num == 0:
-        df_train_ = np.expand_dims(previous_train, axis=0) 
-    else:
-        if (previous_train == 0).any():
-          print(previous_train)
-        new_item = (i - previous_train) / previous_train
-        df_train_ = np.append(df_train_, np.expand_dims(new_item, axis=0), axis=0)
-    previous_train = i
-```
+* Baseline보다 정확도가 약 2%, 기존 KD를 사용했을 떄보다 1% 이상 상승함.
+![image](https://user-images.githubusercontent.com/40812418/146674391-e31d3ac9-d24e-468d-84e5-1301dd1dd2c7.png)
 
+
+* RoI별 정확도 차이 비교를 위한 추가 실험 결과
+![image](https://user-images.githubusercontent.com/40812418/146674410-20ca7b19-f8cf-4723-b4fc-129c4e573500.png)
+
+* 세부적인 RoI 별 정확도 차이 비교를 위한 피실험자별 실험 결과
+![image](https://user-images.githubusercontent.com/40812418/146674423-6bd472c8-625f-4b31-9f53-63f82bb7f61d.png)
 
 ## Conclusion
 
