@@ -81,10 +81,8 @@ Knowledge Distillation
 ![image](https://user-images.githubusercontent.com/40812418/146674391-e31d3ac9-d24e-468d-84e5-1301dd1dd2c7.png)
 
 
-* RoI별 정확도 차이 비교를 위한 추가 실험 결과
+* RoI 별 정확도 차이 비교를 위한 실험 결과 및 피실험자별 세부 결과
 ![image](https://user-images.githubusercontent.com/40812418/146674410-20ca7b19-f8cf-4723-b4fc-129c4e573500.png)
-
-* 세부적인 RoI 별 정확도 차이 비교를 위한 피실험자별 실험 결과
 ![image](https://user-images.githubusercontent.com/40812418/146674423-6bd472c8-625f-4b31-9f53-63f82bb7f61d.png)
 
 ## Conclusion
